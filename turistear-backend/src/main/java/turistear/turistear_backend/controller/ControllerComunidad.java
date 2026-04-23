@@ -48,7 +48,7 @@ public class ControllerComunidad {
 
     // GET /api/comunidad/publicaciones/{idItinerario}
     @GetMapping("/publicaciones/{idItinerario}")
-    public Itinerario obtenerPublicacionPorId(@PathVariable Long idItinerario) {
+    public ItinerarioDTO obtenerPublicacionPorId(@PathVariable Long idItinerario) {
         return serviceComunidad.obtenerPublicacionPorId(idItinerario);
     }
 }

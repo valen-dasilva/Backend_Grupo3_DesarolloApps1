@@ -7,6 +7,8 @@ import turistear.turistear_backend.dto.ItinerarioRequest;
 import turistear.turistear_backend.model.Itinerario;
 import turistear.turistear_backend.service.ServiceItinerario;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Set;
 
 @RestController
@@ -20,8 +22,8 @@ public class ControllerItinerary {
     }
 
     @PostMapping
-    public Itinerario crearItinerario(@RequestBody ItinerarioRequest request) {
-        return serviceItinerario.crearItinerario(request);
+    public void crearItinerario(@RequestBody ItinerarioRequest request) {
+        serviceItinerario.crearItinerario(request);
     }
 
     @GetMapping("/itinerarios")
@@ -33,6 +35,22 @@ public class ControllerItinerary {
     @GetMapping("/itinerarios/favoritos")
     public Set<ItinerarioDTO> getItinerariosFavoritos(@RequestParam Long id_usuario){
         return serviceItinerario.getItinerariosFavoritos(id_usuario);
+    }
+
+    @PostMapping("/itinerarios/{idItinerario}/actividades/{idActividad}")
+    public ItinerarioDTO agregarActividadItinerario(
+            @PathVariable Long idItinerario,
+            @PathVariable Long idActividad,
+            @RequestParam LocalDate fecha,
+            @RequestParam LocalTime hora) {
+        return serviceItinerario.agregarActividadItinerario(idItinerario, idActividad, fecha, hora);
+    }
+
+    @DeleteMapping("/itinerarios/{idItinerario}/items/{idItem}")
+    public ItinerarioDTO eliminarActividadItinerario(
+            @PathVariable Long idItinerario,
+            @PathVariable Long idItem) {
+        return serviceItinerario.eliminarActividadItinerario(idItinerario, idItem);
     }
 
 //    @GetMapping("/{id}")

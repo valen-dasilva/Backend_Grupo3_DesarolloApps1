@@ -42,7 +42,7 @@ public class ControllerFavoritos {
 
     // GET /api/favoritos/{idUsuario}/{idItinerario}/descargar
     @GetMapping("/{idUsuario}/{idItinerario}/descargar")
-    public Itinerario descargarFavorito(
+    public ItinerarioDTO descargarFavorito(
             @PathVariable Long idUsuario,
             @PathVariable Long idItinerario) {
         return serviceFavoritos.descargarFavorito(idUsuario, idItinerario);

@@ -1,12 +1,16 @@
 package turistear.turistear_backend.model;
 
 import jakarta.persistence.*;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Entity
 @Table(name = "itinerario_items")
+@EqualsAndHashCode(of = "id")
+@ToString(exclude = {"itinerario", "actividad"})
 public class ItemItinerario {
 
     @Id
@@ -26,6 +30,26 @@ public class ItemItinerario {
 
     public Actividad getActividad() {
         return actividad;
+    }
+
+    public void setItinerario(Itinerario itinerario) {
+        this.itinerario = itinerario;
+    }
+
+    public void setActividad(Actividad actividad) {
+        this.actividad = actividad;
+    }
+
+    public void setFecha(LocalDate fecha) {
+        this.fecha = fecha;
+    }
+
+    public void setHora(LocalTime hora) {
+        this.hora = hora;
+    }
+
+    public Long getId() {
+        return id;
     }
 }
 

@@ -5,12 +5,17 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import turistear.turistear_backend.dto.ItinerarioDTO;
 import turistear.turistear_backend.dto.ItinerarioRequest;
+import turistear.turistear_backend.model.Actividad;
+import turistear.turistear_backend.model.ItemItinerario;
 import turistear.turistear_backend.model.Itinerario;
 import turistear.turistear_backend.model.Usuario;
+import turistear.turistear_backend.repository.ActividadRepository;
 import turistear.turistear_backend.repository.ItinerarioRepository;
 import turistear.turistear_backend.repository.UsuarioRepository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -20,17 +25,20 @@ public class ServiceItinerario {
 
     private final UsuarioRepository repositorioUsuario;
     private final ItinerarioRepository repositorioItinerario;
+    private final ActividadRepository repositorioActividad;
 
     public ServiceItinerario(UsuarioRepository repositorioUsuario,
-                             ItinerarioRepository itinerarioRepository) {
+                             ItinerarioRepository itinerarioRepository,
+                             ActividadRepository repositorioActividad) {
         this.repositorioUsuario = repositorioUsuario;
         this.repositorioItinerario = itinerarioRepository;
+        this.repositorioActividad = repositorioActividad;
     }
 
 
     // Correcto:
     @Transactional
-    public Itinerario crearItinerario(ItinerarioRequest request) {
+    public void crearItinerario(ItinerarioRequest request) {
         // 1. Buscar el usuario REAL en la base
         Usuario creador = repositorioUsuario.findById(request.idCreador())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + request.idCreador()));
@@ -48,7 +56,7 @@ public class ServiceItinerario {
 
         // 3. Guardar
         creador.getMis_itinerarios().add(itinerario);
-        return repositorioItinerario.save(itinerario);
+        repositorioItinerario.save(itinerario);
     }
 
 //    public Usuario agregarItinerarioAUsuario(Integer idUsuario, Integer idItinerario) {
@@ -82,5 +90,49 @@ public class ServiceItinerario {
                 .stream()
                 .map(ItinerarioDTO::from)
                 .collect(Collectors.toSet());
+    }
+
+    @Transactional
+    public ItinerarioDTO agregarActividadItinerario(
+            Long idItinerario,
+            Long idActividad,
+            LocalDate fecha,
+            LocalTime hora) {
+
+        Itinerario itinerario = repositorioItinerario.findById(idItinerario)
+                .orElseThrow(() -> new RuntimeException("No se encontró el itinerario"));
+
+        Actividad actividad = repositorioActividad.findById(idActividad)
+                .orElseThrow(() -> new RuntimeException("No se encontró la actividad"));
+
+        ItemItinerario itemItinerario = new ItemItinerario();
+        itemItinerario.setItinerario(itinerario);
+        itemItinerario.setActividad(actividad);
+        itemItinerario.setFecha(fecha);
+        itemItinerario.setHora(hora);
+
+        itinerario.getItemItinerarios().add(itemItinerario);
+
+        // Guardar el itinerario. Gracias a CascadeType.ALL en @OneToMany,
+        // el ItemItinerario se guarda automáticamente.
+        Itinerario guardado = repositorioItinerario.save(itinerario);
+
+        return ItinerarioDTO.from(guardado);
+    }
+
+    @Transactional
+    public ItinerarioDTO eliminarActividadItinerario(Long idItinerario, Long idItem) {
+        Itinerario itinerario = repositorioItinerario.findById(idItinerario)
+                .orElseThrow(() -> new RuntimeException("No se encontró el itinerario"));
+
+        boolean removido = itinerario.getItemItinerarios()
+                .removeIf(item -> item.getId().equals(idItem));
+
+        if (!removido) {
+            throw new RuntimeException("El item no pertenece a este itinerario");
+        }
+
+        Itinerario guardado = repositorioItinerario.save(itinerario);
+        return ItinerarioDTO.from(guardado);
     }
 }

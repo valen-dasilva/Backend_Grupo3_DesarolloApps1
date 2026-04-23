@@ -93,4 +93,17 @@ public class Usuario {
     public Set<Itinerario> getFavoritos() {
         return favoritos;
     }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setContrasenia(String contrasenia) {
+        this.contrasenia = contrasenia;
+    }
+
+
+    public void setTema(TipoTema tema) {
+        this.tema = tema;
+    }
 }

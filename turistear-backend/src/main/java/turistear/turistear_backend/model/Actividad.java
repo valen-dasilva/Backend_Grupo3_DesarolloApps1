@@ -3,8 +3,10 @@ package turistear.turistear_backend.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import turistear.turistear_backend.enumerable.CategoriaActividad;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -20,12 +22,12 @@ public class Actividad {
     @Column(name = "id_actividad")
     private Long idActividad;
 
-    @ManyToMany
-    @JoinTable(
-            name = "actividad_etiquetas",
-            joinColumns = @JoinColumn(name = "actividad_id"),
-            inverseJoinColumns = @JoinColumn(name = "etiqueta_id"))
-    private Set<Etiqueta> tags;
+
+    @ElementCollection
+    @Enumerated(EnumType.STRING)
+    @CollectionTable(name = "actividad_etiquetas", joinColumns = @JoinColumn(name = "actividad_id"))
+    @Column(name = "etiqueta")
+    private Set<CategoriaActividad> tags = new HashSet<>();
 
     @Column(nullable = false)
     private String nombre;
@@ -51,7 +53,7 @@ public class Actividad {
         return idActividad;
     }
 
-    public Set<Etiqueta> getTags() {
+    public Set<CategoriaActividad> getTags() {
         return tags;
     }
 
@@ -66,4 +68,6 @@ public class Actividad {
     public String getUbicacion() {
         return ubicacion;
     }
+
+
 }
