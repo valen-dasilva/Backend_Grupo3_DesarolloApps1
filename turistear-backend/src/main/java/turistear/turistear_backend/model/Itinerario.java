@@ -29,8 +29,6 @@ public class Itinerario {
     @Column(nullable = false)
     private String titulo;
 
-//    private String guia;
-
     @Column(nullable = false)
     private String destino;
 
