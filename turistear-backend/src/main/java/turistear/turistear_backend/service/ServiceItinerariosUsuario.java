@@ -12,10 +12,12 @@ import turistear.turistear_backend.dto.favoritos.ItemFavoritoRequest;
 import turistear.turistear_backend.dto.favoritos.ItemItinerarioUsuarioDTO;
 import turistear.turistear_backend.dto.favoritos.ItinerarioUsuarioDTO;
 import turistear.turistear_backend.dto.favoritos.ItinerarioUsuarioResumenDTO;
+import turistear.turistear_backend.dto.favoritos.generationDTOs.PromptItineraryDTO;
 import turistear.turistear_backend.exception.BadRequestException;
 import turistear.turistear_backend.exception.ResourceNotFoundException;
 import turistear.turistear_backend.model.*;
 import turistear.turistear_backend.repository.*;
+import turistear.turistear_backend.service.generationAPI.GenAPIInterface;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -44,6 +46,8 @@ public class ServiceItinerariosUsuario {
     private final FavoritoRepository favoritoRepo;
     private final EtiquetaRepository etiquetaRepo;
     private final FotoItinerarioUsuarioRepository fotoRepo;
+
+    private final GenAPIInterface generationAPI;
 
     /* ---------------------------------------------------------------- *
      *  POST /itinerarios  — crear desde cero                           *
@@ -97,6 +101,34 @@ public class ServiceItinerariosUsuario {
 
         return ItinerarioUsuarioDTO.from(itinerarioRepo.save(nuevo));
     }
+
+    /* ---------------------------------------------------------------- *
+     *  POST /itinerarios/generate  — Generar con IA                             *
+     * ---------------------------------------------------------------- */
+
+    @Transactional
+    public List<ItinerarioUsuarioDTO> generarConIA(Long idUsuario, PromptItineraryDTO prompt) {
+        Usuario usuario = usuarioRepo.findById(idUsuario)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        List<ItinerarioUsuario> itinerariosGenerados = generationAPI.generateItineraries(prompt);
+        
+        java.util.Set<Etiqueta> etiquetas = new java.util.HashSet<>();
+        if (prompt.categorias() != null && !prompt.categorias().isEmpty()) {
+            etiquetas = etiquetaRepo.findByNombreIn(new java.util.HashSet<>(prompt.categorias()));
+        }
+        
+        for (ItinerarioUsuario itinerario : itinerariosGenerados) {
+            itinerario.setUsuario(usuario);
+            if (!etiquetas.isEmpty()) {
+                itinerario.getEtiquetas().addAll(etiquetas);
+            }
+        }
+
+        List<ItinerarioUsuario> guardados = itinerarioRepo.saveAll(itinerariosGenerados);
+        return guardados.stream().map(ItinerarioUsuarioDTO::from).toList();
+    }
+
 
     /* ---------------------------------------------------------------- *
      *  POST /itinerarios/desde-favorito/{idSistema}  — crear copia     *

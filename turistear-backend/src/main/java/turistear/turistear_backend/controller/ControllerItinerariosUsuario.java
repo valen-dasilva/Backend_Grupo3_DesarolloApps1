@@ -22,6 +22,7 @@ import turistear.turistear_backend.dto.favoritos.ItemFavoritoRequest;
 import turistear.turistear_backend.dto.favoritos.ItemItinerarioUsuarioDTO;
 import turistear.turistear_backend.dto.favoritos.ItinerarioUsuarioDTO;
 import turistear.turistear_backend.dto.favoritos.ItinerarioUsuarioResumenDTO;
+import turistear.turistear_backend.dto.favoritos.generationDTOs.PromptItineraryDTO;
 import turistear.turistear_backend.security.AuthUtils;
 import turistear.turistear_backend.service.ServiceItinerariosUsuario;
 
@@ -59,6 +60,22 @@ public class ControllerItinerariosUsuario {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(serviceItinerarios.crearDesdeCero(idUsuario, request));
+    }
+
+    @PostMapping("/generate")
+    @Operation(summary = "Generar múltiples itinerarios con Inteligencia Artificial")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Itinerarios generados y guardados exitosamente"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos en el prompt",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<List<ItinerarioUsuarioDTO>> generarConIA(
+            @Valid @RequestBody PromptItineraryDTO request,
+            Authentication authentication) {
+        Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(serviceItinerarios.generarConIA(idUsuario, request));
     }
 
     @PostMapping("/desde-favorito/{idSistema}")
