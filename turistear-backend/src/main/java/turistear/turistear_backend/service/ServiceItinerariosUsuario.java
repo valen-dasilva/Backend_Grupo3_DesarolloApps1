@@ -58,6 +58,43 @@ public class ServiceItinerariosUsuario {
 
     @Transactional
     public ItinerarioUsuarioDTO crearDesdeCero(Long idUsuario, CrearItinerarioRequest request) {
+        ItinerarioUsuario nuevo = construirEntidadItinerario(idUsuario, request);
+        return ItinerarioUsuarioDTO.from(itinerarioRepo.save(nuevo));
+    }
+
+
+
+    /* ---------------------------------------------------------------- *
+     *  POST /itinerarios/completo  — Guardar itinerario copmleto       *
+     * ---------------------------------------------------------------- */
+
+    @Transactional
+    public ItinerarioUsuarioDTO guardarCompleto(Long idUsuario,
+            CrearItinerarioRequest itinerario,
+            List<ItemFavoritoRequest> items) {
+        
+        ItinerarioUsuario nuevo = construirEntidadItinerario(idUsuario, itinerario);
+
+        if (items != null) {
+            for (ItemFavoritoRequest reqItem : items) {
+                ItemItinerarioUsuario item = ItemItinerarioUsuario.builder()
+                        .itinerarioUsuario(nuevo)
+                        .nombreActividad(reqItem.nombreActividad())
+                        .descripcion(reqItem.descripcion())
+                        .localidad(reqItem.localidad())
+                        .direccion(reqItem.direccion())
+                        .dia(reqItem.dia())
+                        .hora(reqItem.hora())
+                        .build();
+                nuevo.getItems().add(item);
+                expandirDuracionSiHaceFalta(nuevo, reqItem.dia());
+            }
+        }
+        
+        return ItinerarioUsuarioDTO.from(itinerarioRepo.save(nuevo));
+    }
+
+    private ItinerarioUsuario construirEntidadItinerario(Long idUsuario, CrearItinerarioRequest request) {
         Usuario usuario = usuarioRepo.findById(idUsuario)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
@@ -102,29 +139,7 @@ public class ServiceItinerariosUsuario {
             nuevo.setFotoPortada(nuevo.getFotos().getFirst().getUrl());
         }
 
-        return ItinerarioUsuarioDTO.from(itinerarioRepo.save(nuevo));
-    }
-
-
-
-    /* ---------------------------------------------------------------- *
-     *  POST /itinerarios/completo  — Guardar itinerario copmleto       *
-     * ---------------------------------------------------------------- */
-
-    @Transactional
-    public ItinerarioUsuarioDTO guardarCompleto(Long idUsuario,
-            CrearItinerarioRequest itinerario,
-            List<ItemFavoritoRequest> items) {
-        
-        ItinerarioUsuarioDTO itinerarioGuardado = crearDesdeCero(idUsuario, itinerario);
-
-        if (items != null) {
-            for (ItemFavoritoRequest item : items) {
-                agregarItem(idUsuario, itinerarioGuardado.idItinerarioUsuario(), item);
-            }
-        }
-        
-        return obtenerDetalle(idUsuario, itinerarioGuardado.idItinerarioUsuario());
+        return nuevo;
     }
 
     /* ---------------------------------------------------------------- *
