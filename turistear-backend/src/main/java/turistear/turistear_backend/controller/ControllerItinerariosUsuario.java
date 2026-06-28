@@ -16,6 +16,7 @@ import turistear.turistear_backend.dto.common.ErrorResponse;
 import turistear.turistear_backend.dto.favoritos.ActualizarFechaInicioRequest;
 import turistear.turistear_backend.dto.favoritos.ActualizarTituloRequest;
 import turistear.turistear_backend.dto.favoritos.AgregarFotoItinerarioRequest;
+import turistear.turistear_backend.dto.favoritos.CrearItinerarioCompletoRequest;
 import turistear.turistear_backend.dto.favoritos.CrearItinerarioRequest;
 import turistear.turistear_backend.dto.favoritos.FotoItinerarioUsuarioDTO;
 import turistear.turistear_backend.dto.favoritos.ItemFavoritoRequest;
@@ -37,266 +38,261 @@ import java.util.List;
 @RestController
 @RequestMapping("/itinerarios")
 @RequiredArgsConstructor
-@Tag(name = "Itinerarios de usuario",
-        description = "Copias e itinerarios propios del usuario con CRUD sobre sus actividades")
+@Tag(name = "Itinerarios de usuario", description = "Copias e itinerarios propios del usuario con CRUD sobre sus actividades")
 public class ControllerItinerariosUsuario {
 
-    private final ServiceItinerariosUsuario serviceItinerarios;
-    private final AuthUtils authUtils;
+        private final ServiceItinerariosUsuario serviceItinerarios;
+        private final AuthUtils authUtils;
 
-    /* ---------------- itinerarios completos ---------------- */
+        /* ---------------- itinerarios completos ---------------- */
 
-    @PostMapping
-    @Operation(summary = "Crear un itinerario propio desde cero")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Itinerario creado"),
-            @ApiResponse(responseCode = "400", description = "Datos inválidos",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    public ResponseEntity<ItinerarioUsuarioDTO> crearDesdeCero(
-            @Valid @RequestBody CrearItinerarioRequest request,
-            Authentication authentication) {
-        Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(serviceItinerarios.crearDesdeCero(idUsuario, request));
-    }
+        @PostMapping
+        @Operation(summary = "Crear un itinerario propio desde cero")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "201", description = "Itinerario creado"),
+                        @ApiResponse(responseCode = "400", description = "Datos inválidos", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        })
+        public ResponseEntity<ItinerarioUsuarioDTO> crearDesdeCero(
+                        @Valid @RequestBody CrearItinerarioRequest request,
+                        Authentication authentication) {
+                Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
+                return ResponseEntity
+                                .status(HttpStatus.CREATED)
+                                .body(serviceItinerarios.crearDesdeCero(idUsuario, request));
+        }
 
-    @PostMapping("/generate")
-    @Operation(summary = "Generar múltiples itinerarios con Inteligencia Artificial")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Itinerarios generados y guardados exitosamente"),
-            @ApiResponse(responseCode = "400", description = "Datos inválidos en el prompt",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    public ResponseEntity<List<ItinerarioUsuarioDTO>> generarConIA(
-            @Valid @RequestBody PromptItineraryDTO request,
-            Authentication authentication) {
-        Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(serviceItinerarios.generarConIA(idUsuario, request));
-    }
+        @PostMapping("/completo")
+        @Operation(summary = "Guardar un itinerario completo propio")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "201", description = "Itinerario creado"),
+                        @ApiResponse(responseCode = "400", description = "Datos inválidos", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        })
+        public ResponseEntity<ItinerarioUsuarioDTO> guardarItinerarioCompleto(
+                        @Valid @RequestBody CrearItinerarioCompletoRequest request,
+                        Authentication authentication) {
 
-    @PostMapping("/desde-favorito/{idSistema}")
-    @Operation(summary = "Crear una copia a partir de un template guardado en favoritos")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Copia creada"),
-            @ApiResponse(responseCode = "400", description = "El template no está en tus favoritos",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Itinerario del sistema no encontrado",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    public ResponseEntity<ItinerarioUsuarioDTO> crearDesdeFavorito(
-            @PathVariable Long idSistema,
-            Authentication authentication) {
-        Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(serviceItinerarios.crearDesdeFavorito(idUsuario, idSistema));
-    }
+                Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
 
-    @GetMapping
-    @Operation(summary = "Listar mis itinerarios")
-    public List<ItinerarioUsuarioResumenDTO> listar(Authentication authentication) {
-        Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
-        return serviceItinerarios.listarItinerarios(idUsuario);
-    }
+                return ResponseEntity
+                                .status(HttpStatus.CREATED)
+                                .body(serviceItinerarios.guardarCompleto(idUsuario, request.itinerario(), request.items()));
+        }
 
-    @GetMapping("/activo")
-    @Operation(summary = "Obtener el itinerario 'activo' (fijado o próximo/en curso)")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Itinerario activo encontrado"),
-            @ApiResponse(responseCode = "404", description = "No hay viajes en curso ni próximos",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    public ItinerarioUsuarioDTO obtenerActivo(Authentication authentication) {
-        Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
-        return serviceItinerarios.obtenerActivo(idUsuario);
-    }
+        @PostMapping("/generate")
+        @Operation(summary = "Generar múltiples itinerarios con Inteligencia Artificial")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "200", description = "Itinerarios generados exitosamente"),
+                        @ApiResponse(responseCode = "400", description = "Datos inválidos en el prompt", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        })
+        public ResponseEntity<List<ItinerarioUsuarioDTO>> generarConIA(
+                        @Valid @RequestBody PromptItineraryDTO request,
+                        Authentication authentication) {
+                Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
+                return ResponseEntity
+                                .status(HttpStatus.OK)
+                                .body(serviceItinerarios.generarConIA(idUsuario, request));
+        }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Detalle de un itinerario (con items)")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Itinerario encontrado"),
-            @ApiResponse(responseCode = "404", description = "Itinerario no encontrado",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    public ItinerarioUsuarioDTO obtenerDetalle(
-            @PathVariable Long id,
-            Authentication authentication) {
-        Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
-        return serviceItinerarios.obtenerDetalle(idUsuario, id);
-    }
+        @PostMapping("/desde-favorito/{idSistema}")
+        @Operation(summary = "Crear una copia a partir de un template guardado en favoritos")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "201", description = "Copia creada"),
+                        @ApiResponse(responseCode = "400", description = "El template no está en tus favoritos", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                        @ApiResponse(responseCode = "404", description = "Itinerario del sistema no encontrado", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        })
+        public ResponseEntity<ItinerarioUsuarioDTO> crearDesdeFavorito(
+                        @PathVariable Long idSistema,
+                        Authentication authentication) {
+                Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
+                return ResponseEntity
+                                .status(HttpStatus.CREATED)
+                                .body(serviceItinerarios.crearDesdeFavorito(idUsuario, idSistema));
+        }
 
-    @PatchMapping("/{id}/titulo")
-    @Operation(summary = "Renombrar un itinerario")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Título actualizado"),
-            @ApiResponse(responseCode = "400", description = "Título inválido",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Itinerario no encontrado",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    public ItinerarioUsuarioDTO actualizarTitulo(
-            @PathVariable Long id,
-            @Valid @RequestBody ActualizarTituloRequest request,
-            Authentication authentication) {
-        Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
-        return serviceItinerarios.actualizarTitulo(idUsuario, id, request);
-    }
+        @GetMapping
+        @Operation(summary = "Listar mis itinerarios")
+        public List<ItinerarioUsuarioResumenDTO> listar(Authentication authentication) {
+                Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
+                return serviceItinerarios.listarItinerarios(idUsuario);
+        }
 
-    @PatchMapping("/{id}/fecha-inicio")
-    @Operation(summary = "Reprogramar la fecha de inicio (la de fin se deriva de la duración)")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Fecha de inicio actualizada"),
-            @ApiResponse(responseCode = "400", description = "Fecha inválida",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Itinerario no encontrado",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    public ItinerarioUsuarioDTO actualizarFechaInicio(
-            @PathVariable Long id,
-            @Valid @RequestBody ActualizarFechaInicioRequest request,
-            Authentication authentication) {
-        Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
-        return serviceItinerarios.actualizarFechaInicio(idUsuario, id, request);
-    }
+        @GetMapping("/activo")
+        @Operation(summary = "Obtener el itinerario 'activo' (fijado o próximo/en curso)")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "200", description = "Itinerario activo encontrado"),
+                        @ApiResponse(responseCode = "404", description = "No hay viajes en curso ni próximos", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        })
+        public ItinerarioUsuarioDTO obtenerActivo(Authentication authentication) {
+                Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
+                return serviceItinerarios.obtenerActivo(idUsuario);
+        }
 
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Eliminar un itinerario")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Itinerario eliminado"),
-            @ApiResponse(responseCode = "404", description = "Itinerario no encontrado",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    public ResponseEntity<Void> eliminar(
-            @PathVariable Long id,
-            Authentication authentication) {
-        Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
-        serviceItinerarios.eliminarItinerario(idUsuario, id);
-        return ResponseEntity.noContent().build();
-    }
+        @GetMapping("/{id}")
+        @Operation(summary = "Detalle de un itinerario (con items)")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "200", description = "Itinerario encontrado"),
+                        @ApiResponse(responseCode = "404", description = "Itinerario no encontrado", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        })
+        public ItinerarioUsuarioDTO obtenerDetalle(
+                        @PathVariable Long id,
+                        Authentication authentication) {
+                Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
+                return serviceItinerarios.obtenerDetalle(idUsuario, id);
+        }
 
-    @PatchMapping("/{id}/completar")
-    @Operation(summary = "Marcar un itinerario como completado (viaje realizado)")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Itinerario marcado como completado"),
-            @ApiResponse(responseCode = "404", description = "Itinerario no encontrado",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    public ResponseEntity<Void> completar(
-            @PathVariable Long id,
-            Authentication authentication) {
-        Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
-        serviceItinerarios.completarItinerario(idUsuario, id);
-        return ResponseEntity.noContent().build();
-    }
+        @PatchMapping("/{id}/titulo")
+        @Operation(summary = "Renombrar un itinerario")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "200", description = "Título actualizado"),
+                        @ApiResponse(responseCode = "400", description = "Título inválido", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                        @ApiResponse(responseCode = "404", description = "Itinerario no encontrado", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        })
+        public ItinerarioUsuarioDTO actualizarTitulo(
+                        @PathVariable Long id,
+                        @Valid @RequestBody ActualizarTituloRequest request,
+                        Authentication authentication) {
+                Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
+                return serviceItinerarios.actualizarTitulo(idUsuario, id, request);
+        }
 
-    @PatchMapping("/{id}/pin")
-    @Operation(summary = "Fijar/desfijar un itinerario como el activo del Home (tachuela)")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Pin actualizado"),
-            @ApiResponse(responseCode = "404", description = "Itinerario no encontrado",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    public ResponseEntity<Void> togglePin(
-            @PathVariable Long id,
-            Authentication authentication) {
-        Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
-        serviceItinerarios.togglePin(idUsuario, id);
-        return ResponseEntity.noContent().build();
-    }
+        @PatchMapping("/{id}/fecha-inicio")
+        @Operation(summary = "Reprogramar la fecha de inicio (la de fin se deriva de la duración)")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "200", description = "Fecha de inicio actualizada"),
+                        @ApiResponse(responseCode = "400", description = "Fecha inválida", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                        @ApiResponse(responseCode = "404", description = "Itinerario no encontrado", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        })
+        public ItinerarioUsuarioDTO actualizarFechaInicio(
+                        @PathVariable Long id,
+                        @Valid @RequestBody ActualizarFechaInicioRequest request,
+                        Authentication authentication) {
+                Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
+                return serviceItinerarios.actualizarFechaInicio(idUsuario, id, request);
+        }
 
-    /* ---------------- items ---------------- */
+        @DeleteMapping("/{id}")
+        @Operation(summary = "Eliminar un itinerario")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "204", description = "Itinerario eliminado"),
+                        @ApiResponse(responseCode = "404", description = "Itinerario no encontrado", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        })
+        public ResponseEntity<Void> eliminar(
+                        @PathVariable Long id,
+                        Authentication authentication) {
+                Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
+                serviceItinerarios.eliminarItinerario(idUsuario, id);
+                return ResponseEntity.noContent().build();
+        }
 
-    @PostMapping("/{id}/items")
-    @Operation(summary = "Agregar una actividad nueva al itinerario")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Actividad agregada"),
-            @ApiResponse(responseCode = "400", description = "Datos inválidos",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Itinerario no encontrado",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    public ResponseEntity<ItemItinerarioUsuarioDTO> agregarItem(
-            @PathVariable Long id,
-            @Valid @RequestBody ItemFavoritoRequest request,
-            Authentication authentication) {
-        Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(serviceItinerarios.agregarItem(idUsuario, id, request));
-    }
+        @PatchMapping("/{id}/completar")
+        @Operation(summary = "Marcar un itinerario como completado (viaje realizado)")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "204", description = "Itinerario marcado como completado"),
+                        @ApiResponse(responseCode = "404", description = "Itinerario no encontrado", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        })
+        public ResponseEntity<Void> completar(
+                        @PathVariable Long id,
+                        Authentication authentication) {
+                Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
+                serviceItinerarios.completarItinerario(idUsuario, id);
+                return ResponseEntity.noContent().build();
+        }
 
-    @PutMapping("/{id}/items/{itemId}")
-    @Operation(summary = "Editar una actividad del itinerario")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Actividad actualizada"),
-            @ApiResponse(responseCode = "400", description = "Datos inválidos",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Itinerario o item no encontrado",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    public ItemItinerarioUsuarioDTO actualizarItem(
-            @PathVariable Long id,
-            @PathVariable Long itemId,
-            @Valid @RequestBody ItemFavoritoRequest request,
-            Authentication authentication) {
-        Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
-        return serviceItinerarios.actualizarItem(idUsuario, id, itemId, request);
-    }
+        @PatchMapping("/{id}/pin")
+        @Operation(summary = "Fijar/desfijar un itinerario como el activo del Home (tachuela)")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "204", description = "Pin actualizado"),
+                        @ApiResponse(responseCode = "404", description = "Itinerario no encontrado", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        })
+        public ResponseEntity<Void> togglePin(
+                        @PathVariable Long id,
+                        Authentication authentication) {
+                Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
+                serviceItinerarios.togglePin(idUsuario, id);
+                return ResponseEntity.noContent().build();
+        }
 
-    @DeleteMapping("/{id}/items/{itemId}")
-    @Operation(summary = "Eliminar una actividad del itinerario")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Actividad eliminada"),
-            @ApiResponse(responseCode = "404", description = "Itinerario o item no encontrado",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    public ResponseEntity<Void> eliminarItem(
-            @PathVariable Long id,
-            @PathVariable Long itemId,
-            Authentication authentication) {
-        Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
-        serviceItinerarios.eliminarItem(idUsuario, id, itemId);
-        return ResponseEntity.noContent().build();
-    }
+        /* ---------------- items ---------------- */
 
-    /* ---------------- fotos ---------------- */
+        @PostMapping("/{id}/items")
+        @Operation(summary = "Agregar una actividad nueva al itinerario")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "201", description = "Actividad agregada"),
+                        @ApiResponse(responseCode = "400", description = "Datos inválidos", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                        @ApiResponse(responseCode = "404", description = "Itinerario no encontrado", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        })
+        public ResponseEntity<ItemItinerarioUsuarioDTO> agregarItem(
+                        @PathVariable Long id,
+                        @Valid @RequestBody ItemFavoritoRequest request,
+                        Authentication authentication) {
+                Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
+                return ResponseEntity
+                                .status(HttpStatus.CREATED)
+                                .body(serviceItinerarios.agregarItem(idUsuario, id, request));
+        }
 
-    @PostMapping("/{id}/fotos")
-    @Operation(summary = "Agregar una foto al itinerario")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Foto agregada"),
-            @ApiResponse(responseCode = "400", description = "URL invalida",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Itinerario no encontrado",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    public ResponseEntity<FotoItinerarioUsuarioDTO> agregarFoto(
-            @PathVariable Long id,
-            @Valid @RequestBody AgregarFotoItinerarioRequest request,
-            Authentication authentication) {
-        Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(serviceItinerarios.agregarFoto(idUsuario, id, request));
-    }
+        @PutMapping("/{id}/items/{itemId}")
+        @Operation(summary = "Editar una actividad del itinerario")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "200", description = "Actividad actualizada"),
+                        @ApiResponse(responseCode = "400", description = "Datos inválidos", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                        @ApiResponse(responseCode = "404", description = "Itinerario o item no encontrado", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        })
+        public ItemItinerarioUsuarioDTO actualizarItem(
+                        @PathVariable Long id,
+                        @PathVariable Long itemId,
+                        @Valid @RequestBody ItemFavoritoRequest request,
+                        Authentication authentication) {
+                Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
+                return serviceItinerarios.actualizarItem(idUsuario, id, itemId, request);
+        }
 
-    @DeleteMapping("/{id}/fotos/{fotoId}")
-    @Operation(summary = "Eliminar una foto del itinerario")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Foto eliminada"),
-            @ApiResponse(responseCode = "404", description = "Itinerario o foto no encontrados",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    public ResponseEntity<Void> eliminarFoto(
-            @PathVariable Long id,
-            @PathVariable Long fotoId,
-            Authentication authentication) {
-        Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
-        serviceItinerarios.eliminarFoto(idUsuario, id, fotoId);
-        return ResponseEntity.noContent().build();
-    }
+        @DeleteMapping("/{id}/items/{itemId}")
+        @Operation(summary = "Eliminar una actividad del itinerario")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "204", description = "Actividad eliminada"),
+                        @ApiResponse(responseCode = "404", description = "Itinerario o item no encontrado", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        })
+        public ResponseEntity<Void> eliminarItem(
+                        @PathVariable Long id,
+                        @PathVariable Long itemId,
+                        Authentication authentication) {
+                Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
+                serviceItinerarios.eliminarItem(idUsuario, id, itemId);
+                return ResponseEntity.noContent().build();
+        }
+
+        /* ---------------- fotos ---------------- */
+
+        @PostMapping("/{id}/fotos")
+        @Operation(summary = "Agregar una foto al itinerario")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "201", description = "Foto agregada"),
+                        @ApiResponse(responseCode = "400", description = "URL invalida", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                        @ApiResponse(responseCode = "404", description = "Itinerario no encontrado", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        })
+        public ResponseEntity<FotoItinerarioUsuarioDTO> agregarFoto(
+                        @PathVariable Long id,
+                        @Valid @RequestBody AgregarFotoItinerarioRequest request,
+                        Authentication authentication) {
+                Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
+                return ResponseEntity
+                                .status(HttpStatus.CREATED)
+                                .body(serviceItinerarios.agregarFoto(idUsuario, id, request));
+        }
+
+        @DeleteMapping("/{id}/fotos/{fotoId}")
+        @Operation(summary = "Eliminar una foto del itinerario")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "204", description = "Foto eliminada"),
+                        @ApiResponse(responseCode = "404", description = "Itinerario o foto no encontrados", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        })
+        public ResponseEntity<Void> eliminarFoto(
+                        @PathVariable Long id,
+                        @PathVariable Long fotoId,
+                        Authentication authentication) {
+                Long idUsuario = authUtils.getIdUsuarioAutenticado(authentication);
+                serviceItinerarios.eliminarFoto(idUsuario, id, fotoId);
+                return ResponseEntity.noContent().build();
+        }
 }

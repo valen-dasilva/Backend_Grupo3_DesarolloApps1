@@ -3,6 +3,9 @@ package turistear.turistear_backend.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import turistear.turistear_backend.dto.favoritos.ActualizarFechaInicioRequest;
 import turistear.turistear_backend.dto.favoritos.ActualizarTituloRequest;
 import turistear.turistear_backend.dto.favoritos.AgregarFotoItinerarioRequest;
@@ -102,11 +105,33 @@ public class ServiceItinerariosUsuario {
         return ItinerarioUsuarioDTO.from(itinerarioRepo.save(nuevo));
     }
 
+
+
     /* ---------------------------------------------------------------- *
-     *  POST /itinerarios/generate  — Generar con IA                             *
+     *  POST /itinerarios/completo  — Guardar itinerario copmleto       *
      * ---------------------------------------------------------------- */
 
     @Transactional
+    public ItinerarioUsuarioDTO guardarCompleto(Long idUsuario,
+            CrearItinerarioRequest itinerario,
+            List<ItemFavoritoRequest> items) {
+        
+        ItinerarioUsuarioDTO itinerarioGuardado = crearDesdeCero(idUsuario, itinerario);
+
+        if (items != null) {
+            for (ItemFavoritoRequest item : items) {
+                agregarItem(idUsuario, itinerarioGuardado.idItinerarioUsuario(), item);
+            }
+        }
+        
+        return obtenerDetalle(idUsuario, itinerarioGuardado.idItinerarioUsuario());
+    }
+
+    /* ---------------------------------------------------------------- *
+     *  POST /itinerarios/generate  — Generar con IA                    *
+     * ---------------------------------------------------------------- */
+
+    @Transactional(readOnly = true)
     public List<ItinerarioUsuarioDTO> generarConIA(Long idUsuario, PromptItineraryDTO prompt) {
         Usuario usuario = usuarioRepo.findById(idUsuario)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
@@ -124,9 +149,7 @@ public class ServiceItinerariosUsuario {
                 itinerario.getEtiquetas().addAll(etiquetas);
             }
         }
-
-        List<ItinerarioUsuario> guardados = itinerarioRepo.saveAll(itinerariosGenerados);
-        return guardados.stream().map(ItinerarioUsuarioDTO::from).toList();
+        return itinerariosGenerados.stream().map(ItinerarioUsuarioDTO::from).toList();
     }
 
 
@@ -463,4 +486,6 @@ public class ServiceItinerariosUsuario {
                 .findByIdItinerarioUsuarioAndUsuario_IdUsuario(id, idUsuario)
                 .orElseThrow(() -> new ResourceNotFoundException("Itinerario no encontrado: " + id));
     }
+
+    
 }
