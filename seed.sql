@@ -257,7 +257,7 @@ SELECT 'Jujuy: Purmamarca y Colores', 'Disfrutá del mágico entorno del Cerro d
 WHERE NOT EXISTS (SELECT 1 FROM itinerarios_sistema WHERE titulo = 'Jujuy: Purmamarca y Colores');
 
 INSERT INTO itinerarios_sistema (titulo, descripcion, provincia, fecha_inicio, fecha_fin, foto_portada, duracion_dias, likes)
-SELECT 'Villa La Angostura: Bosque Arrayanes', 'Un recorrido lacustre hasta la península de Quetrihué para caminar en el único bosque puro de arrayanes.', 'NEUQUEN', '2026-07-28', '2026-07-29', 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/VillaLaAngostura089.JPG/1280px-VillaLaAngostura089.JPG', 2, 0
+SELECT 'Villa La Angostura: Bosque Arrayanes', 'Un recorrido lacustre hasta la península de Quetrihué para caminar en el único bosque puro de arrayanes.', 'NEUQUEN', '2026-07-28', '2026-07-29', 'https://qwkqhlpwwpjjqcbztbcl.supabase.co/storage/v1/object/public/itinerarios-usuario-fotos/villa-la-angostura.webp', 2, 0
 WHERE NOT EXISTS (SELECT 1 FROM itinerarios_sistema WHERE titulo = 'Villa La Angostura: Bosque Arrayanes');
 
 INSERT INTO itinerarios_sistema (titulo, descripcion, provincia, fecha_inicio, fecha_fin, foto_portada, duracion_dias, likes)
