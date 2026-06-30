@@ -64,7 +64,7 @@ VALUES
    'Dos días dedicados a bodegas y mesa larga en Mendoza.',
    'MENDOZA',
    '2026-08-15', '2026-08-16',
-   'https://example.com/mendoza.jpg',
+   'https://qwkqhlpwwpjjqcbztbcl.supabase.co/storage/v1/object/public/itinerarios-usuario-fotos/mendoza-gastronomia.jpg',
    2)
 ON CONFLICT DO NOTHING;
 
